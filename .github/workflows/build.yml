@@ -115,32 +115,31 @@ jobs:
           path = Path("buildozer.spec")
           text = path.read_text()
 
-          # Accepter automatiquement les licences Android
-          text = text.replace(
-              "#android.accept_sdk_license = False",
-              "android.accept_sdk_license = True"
+          # Activer l'acceptation automatique des licences Android
+          text = re.sub(
+              r"^\s*#?\s*android\.accept_sdk_license\s*=.*$",
+              "android.accept_sdk_license = True",
+              text,
+              flags=re.MULTILINE
           )
 
-          # Forcer Python 3.11 côté Android et côté host
-          new = (
-              "requirements = "
-              "python3==3.11.9,"
-              "hostpython3==3.11.9,"
-              "kivy,"
-              "requests"
-          )
-
+          # Forcer Python 3.11 pour python-for-android
           text = re.sub(
               r"^requirements\s*=.*$",
-              new,
+              "requirements = python3==3.11.9,hostpython3==3.11.9,kivy,requests",
               text,
               flags=re.MULTILINE
           )
 
           path.write_text(text)
 
-          print("===== buildozer.spec =====")
-          print(path.read_text())
+          print("===== Configuration finale =====")
+          for line in path.read_text().splitlines():
+              if (
+                  line.startswith("requirements =")
+                  or line.startswith("android.accept_sdk_license")
+              ):
+                  print(line)
           PY
 
       # 11. Vérification de la configuration
@@ -151,7 +150,7 @@ jobs:
 
           echo "===== Buildozer spec ====="
           grep -E \
-            "^(title|package.name|package.domain|requirements|android.archs|android.accept_sdk_license)" \
+            "^(requirements|android.accept_sdk_license|android.archs)" \
             buildozer.spec
 
       # 12. Initialisation de l'environnement Android
