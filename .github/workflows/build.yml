@@ -6,30 +6,36 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  PYTHON_VERSION: "3.11"
+  JAVA_VERSION: "17"
+  PYTHONFORANDROID_PREREQUISITES_INSTALL_INTERACTIVE: "0"
+
 jobs:
   build:
     runs-on: ubuntu-22.04
 
     steps:
 
-      # 1. Récupérer le projet
+      # 1. Récupération du projet
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Installer Python
+      # 2. Python 3.11
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
 
-      # 3. Installer Java
+      # 3. Java 17
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
 
-      # 4. Installer les dépendances système
+      # 4. Dépendances système
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -45,6 +51,7 @@ jobs:
             zlib1g-dev \
             libncurses5-dev \
             libncursesw5-dev \
+            libtinfo5 \
             cmake \
             libffi-dev \
             libssl-dev \
@@ -52,50 +59,122 @@ jobs:
             autopoint \
             gettext
 
-      # 5. Mettre pip à jour
-      - name: Upgrade pip
+      # 5. Vérification Python
+      - name: Check Python environment
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          which python
+          python --version
+          python -m pip --version
 
-      # 6. Installer Buildozer + Cython
+      # 6. Mise à jour des outils Python
+      - name: Upgrade Python build tools
+        run: |
+          python -m pip install --upgrade \
+            pip \
+            setuptools \
+            wheel \
+            virtualenv
+
+      # 7. Installation de Buildozer et Cython
       - name: Install Buildozer
         run: |
           python -m pip install \
             "buildozer==1.5.0" \
-            "cython==0.29.33" \
-            "virtualenv"
+            "cython==0.29.33"
 
-      # 7. Vérifier les versions
-      - name: Check build environment
+      # 8. Vérification des outils
+      - name: Check build tools
         run: |
+          echo "===== PYTHON ====="
           python --version
+
+          echo "===== PIP ====="
           python -m pip --version
+
+          echo "===== BUILDOZER ====="
           buildozer --version
+
+          echo "===== CYTHON ====="
           cython --version
 
-      # 8. Nettoyer complètement l'ancien environnement Buildozer
+      # 9. Nettoyage complet de Buildozer
       - name: Clean Buildozer environment
         run: |
           rm -rf .buildozer
           rm -rf bin
 
-      # 9. Accepter automatiquement les licences Android
-      - name: Configure Android licenses
-        run: |
-          sed -i 's/^# *android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec || true
+          echo "Environnement Buildozer nettoyé."
 
-      # 10. Construire l'APK
+      # 10. Configuration Android
+      - name: Configure Android build
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("buildozer.spec")
+          text = path.read_text()
+
+          # Accepter automatiquement les licences Android
+          text = text.replace(
+              "#android.accept_sdk_license = False",
+              "android.accept_sdk_license = True"
+          )
+
+          # Forcer Python 3.11 côté Android et côté host
+          new = (
+              "requirements = "
+              "python3==3.11.9,"
+              "hostpython3==3.11.9,"
+              "kivy,"
+              "requests"
+          )
+
+          text = re.sub(
+              r"^requirements\s*=.*$",
+              new,
+              text,
+              flags=re.MULTILINE
+          )
+
+          path.write_text(text)
+
+          print("===== buildozer.spec =====")
+          print(path.read_text())
+          PY
+
+      # 11. Vérification de la configuration
+      - name: Verify Buildozer configuration
+        run: |
+          echo "===== Python host ====="
+          python --version
+
+          echo "===== Buildozer spec ====="
+          grep -E \
+            "^(title|package.name|package.domain|requirements|android.archs|android.accept_sdk_license)" \
+            buildozer.spec
+
+      # 12. Initialisation de l'environnement Android
+      - name: Initialize Android environment
+        run: |
+          buildozer android p4a -- --help
+
+      # 13. Construction de l'APK
       - name: Build APK
         run: |
-          buildozer android debug
+          buildozer -v android debug
 
-      # 11. Vérifier que l'APK existe
+      # 14. Vérification de l'APK
       - name: Check APK
         run: |
-          echo "APK générés :"
-          ls -lh bin/*.apk
+          echo "===== APK générés ====="
 
-      # 12. Télécharger l'APK comme artifact GitHub
+          if ! ls -lh bin/*.apk; then
+            echo "ERREUR : aucun APK n'a été généré."
+            exit 1
+          fi
+
+      # 15. Publication de l'APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
