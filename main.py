@@ -6,7 +6,7 @@ from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.label import Label
 
-API_KEY = "TA_CLE_SERPER"
+API_KEY = "88e3203983def48b718621901e3ee9986537f903"
 
 class SearchApp(App):
     def build(self):
