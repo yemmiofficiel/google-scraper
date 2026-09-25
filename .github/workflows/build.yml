@@ -126,7 +126,7 @@ jobs:
           # Forcer Python 3.11 pour python-for-android
           text = re.sub(
               r"^requirements\s*=.*$",
-              "requirements = python3==3.11.9,hostpython3==3.11.9,kivy,requests",
+              "requirements = python3==3.11.9,hostpython3==3.11.9,kivy,requests,openpyxl",
               text,
               flags=re.MULTILINE
           )
