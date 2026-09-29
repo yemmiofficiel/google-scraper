@@ -326,7 +326,6 @@ class SearchApp(App):
                 "Erreur pendant la recherche :\n\n"
                 + str(e)
             )
-
     # ========================================================
     # AFFICHAGE RESULTATS
     # ========================================================
@@ -367,8 +366,13 @@ class SearchApp(App):
 
             bloc = BorderedBox(
                 orientation="vertical",
-                padding=dp(12),
-                spacing=dp(7),
+                padding=[
+                    dp(12),
+                    dp(10),
+                    dp(12),
+                    dp(10)
+                ],
+                spacing=dp(6),
                 size_hint_y=None
             )
 
@@ -386,20 +390,14 @@ class SearchApp(App):
                 size_hint_y=None
             )
 
-            label_titre.text_size = (
-                None,
-                None
-            )
-
             # ------------------------------------------------
             # URL
             # ------------------------------------------------
 
             label_url = Label(
-                text=f"[color=666666]{lien}[/color]",
-                markup=True,
+                text=lien,
                 color=GREY,
-                font_size=dp(13),
+                font_size=dp(12),
                 halign="left",
                 valign="top",
                 size_hint_y=None
@@ -419,50 +417,51 @@ class SearchApp(App):
             )
 
             # ------------------------------------------------
-            # LARGEUR DU TEXTE
+            # LARGEUR DES TEXTES
             # ------------------------------------------------
 
-            largeur = (
-                self.scroll.width
-                - dp(35)
+            def mettre_a_jour_largeur(
+                widget,
+                largeur
+            ):
+
+                widget.text_size = (
+                    max(1, largeur - dp(24)),
+                    None
+                )
+
+            # ------------------------------------------------
+            # HAUTEUR AUTOMATIQUE DES TEXTES
+            # ------------------------------------------------
+
+            def mettre_a_jour_hauteur(
+                widget,
+                texture_size
+            ):
+
+                widget.height = (
+                    texture_size[1]
+                    + dp(2)
+                )
+
+            # ------------------------------------------------
+            # LIENS
+            # ------------------------------------------------
+
+            label_titre.bind(
+                texture_size=mettre_a_jour_hauteur
             )
 
-            label_titre.text_size = (
-                largeur,
-                None
+            label_url.bind(
+                texture_size=mettre_a_jour_hauteur
             )
 
-            label_url.text_size = (
-                largeur,
-                None
-            )
-
-            label_description.text_size = (
-                largeur,
-                None
+            label_description.bind(
+                texture_size=mettre_a_jour_hauteur
             )
 
             # ------------------------------------------------
-            # HAUTEUR
-            # ------------------------------------------------
-
-            label_titre.height = (
-                label_titre.texture_size[1]
-                + dp(3)
-            )
-
-            label_url.height = (
-                label_url.texture_size[1]
-                + dp(3)
-            )
-
-            label_description.height = (
-                label_description.texture_size[1]
-                + dp(3)
-            )
-
-            # ------------------------------------------------
-            # AJOUT
+            # AJOUT DES LABELS
             # ------------------------------------------------
 
             bloc.add_widget(
@@ -481,18 +480,67 @@ class SearchApp(App):
             # HAUTEUR DU BLOC
             # ------------------------------------------------
 
-            bloc.height = (
-                label_titre.height
-                + label_url.height
-                + label_description.height
-                + dp(40)
+            def mettre_a_jour_bloc(
+                instance,
+                size
+            ):
+
+                bloc.height = (
+                    label_titre.height
+                    + label_url.height
+                    + label_description.height
+                    + dp(32)
+                )
+
+            bloc.bind(
+                size=mettre_a_jour_bloc
             )
+
+            # ------------------------------------------------
+            # LARGEUR DES TEXTES SELON LE BLOC
+            # ------------------------------------------------
+
+            def ajuster_textes(
+                instance,
+                size
+            ):
+
+                largeur = (
+                    instance.width
+                    - dp(24)
+                )
+
+                label_titre.text_size = (
+                    max(1, largeur),
+                    None
+                )
+
+                label_url.text_size = (
+                    max(1, largeur),
+                    None
+                )
+
+                label_description.text_size = (
+                    max(1, largeur),
+                    None
+                )
+
+            bloc.bind(
+                size=ajuster_textes
+            )
+
+            # ------------------------------------------------
+            # AJOUT AU SCROLL
+            # ------------------------------------------------
 
             self.resultats_box.add_widget(
                 bloc
             )
 
-        # Revenir en haut après une nouvelle recherche
+        # ----------------------------------------------------
+        # REVENIR EN HAUT
+        # ----------------------------------------------------
+
         self.scroll.scroll_y = 1
 
     # ========================================================
