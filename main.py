@@ -328,7 +328,7 @@ class SearchApp(App):
             )
     # ========================================================
     # AFFICHAGE RESULTATS
-    # ========================================================
+    # ========================================================    # ========================================================
 
     def afficher_resultats(self):
 
@@ -417,47 +417,57 @@ class SearchApp(App):
             )
 
             # ------------------------------------------------
-            # LARGEUR DES TEXTES
+            # LARGEUR DU TEXTE
             # ------------------------------------------------
 
-            def mettre_a_jour_largeur(
-                widget,
-                largeur
-            ):
-
-                widget.text_size = (
-                    max(1, largeur - dp(24)),
-                    None
-                )
-
-            # ------------------------------------------------
-            # HAUTEUR AUTOMATIQUE DES TEXTES
-            # ------------------------------------------------
-
-            def mettre_a_jour_hauteur(
-                widget,
-                texture_size
-            ):
-
-                widget.height = (
-                    texture_size[1]
-                    + dp(2)
-                )
-
-            # ------------------------------------------------
-            # LIENS
-            # ------------------------------------------------
-
-            label_titre.bind(
-                texture_size=mettre_a_jour_hauteur
+            largeur = (
+                self.scroll.width
+                - dp(24)
             )
 
-            label_url.bind(
-                texture_size=mettre_a_jour_hauteur
+            if largeur < dp(1):
+                largeur = dp(1)
+
+            label_titre.text_size = (
+                largeur,
+                None
             )
 
-            label_description.bind(
-                texture_size=mettre_a_jour_hauteur
+            label_url.text_size = (
+                largeur,
+                None
+            )
+
+            label_description.text_size = (
+                largeur,
+                None
+            )
+
+            # ------------------------------------------------
+            # HAUTEUR INITIALE
+            # ------------------------------------------------
+
+            label_titre.height = (
+                label_titre.texture_size[1]
+            )
+
+            label_url.height = (
+                label_url.texture_size[1]
+            )
+
+            label_description.height = (
+                label_description.texture_size[1]
+            )
+
+            # ------------------------------------------------
+            # HAUTEUR DU BLOC
+            # ------------------------------------------------
+
+            bloc.height = (
+                label_titre.height
+                + label_url.height
+                + label_description.height
+                + dp(32)
             )
 
             # ------------------------------------------------
@@ -477,60 +487,7 @@ class SearchApp(App):
             )
 
             # ------------------------------------------------
-            # HAUTEUR DU BLOC
-            # ------------------------------------------------
-
-            def mettre_a_jour_bloc(
-                instance,
-                size
-            ):
-
-                bloc.height = (
-                    label_titre.height
-                    + label_url.height
-                    + label_description.height
-                    + dp(32)
-                )
-
-            bloc.bind(
-                size=mettre_a_jour_bloc
-            )
-
-            # ------------------------------------------------
-            # LARGEUR DES TEXTES SELON LE BLOC
-            # ------------------------------------------------
-
-            def ajuster_textes(
-                instance,
-                size
-            ):
-
-                largeur = (
-                    instance.width
-                    - dp(24)
-                )
-
-                label_titre.text_size = (
-                    max(1, largeur),
-                    None
-                )
-
-                label_url.text_size = (
-                    max(1, largeur),
-                    None
-                )
-
-                label_description.text_size = (
-                    max(1, largeur),
-                    None
-                )
-
-            bloc.bind(
-                size=ajuster_textes
-            )
-
-            # ------------------------------------------------
-            # AJOUT AU SCROLL
+            # AJOUT DU BLOC AUX RESULTATS
             # ------------------------------------------------
 
             self.resultats_box.add_widget(
@@ -539,223 +496,6 @@ class SearchApp(App):
 
         # ----------------------------------------------------
         # REVENIR EN HAUT
-        # ----------------------------------------------------
-
-        self.scroll.scroll_y = 1
-
-    # ========================================================
-    # MESSAGE
-    # ========================================================
-
-    def afficher_message(self, message):
-
-        self.resultats_box.clear_widgets()
-
-        self.resultats_info.text = (
-            "Résultats de recherche"
-        )
-
-        label = Label(
-            text=message,
-            color=BLACK,
-            font_size=dp(17),
-            halign="center",
-            valign="middle",
-            size_hint_y=None
-        )
-
-        label.text_size = (
-            self.scroll.width - dp(30),
-            None
-        )
-
-        label.height = (
-            label.texture_size[1]
-            + dp(30)
-        )
-
-        self.resultats_box.add_widget(
-            label
-        )
-    def afficher_resultats(self):
-
-        self.resultats_box.clear_widgets()
-
-        nombre = len(self.resultats)
-
-        self.resultats_info.text = (
-            f"Résultats trouvés : {nombre}"
-        )
-
-        for i, resultat in enumerate(
-            self.resultats,
-            start=1
-        ):
-
-            titre = resultat.get(
-                "title",
-                "Sans titre"
-            )
-
-            lien = resultat.get(
-                "link",
-                ""
-            )
-
-            description = resultat.get(
-                "snippet",
-                ""
-            )
-
-            # ------------------------------------------------
-            # BLOC RESULTAT
-            # ------------------------------------------------
-
-            bloc = BorderedBox(
-                orientation="vertical",
-                padding=[
-                    dp(12),
-                    dp(10),
-                    dp(12),
-                    dp(10)
-                ],
-                spacing=dp(6),
-                size_hint_y=None
-            )
-
-            # ------------------------------------------------
-            # TITRE
-            # ------------------------------------------------
-
-            label_titre = Label(
-                text=f"[b]{i}. {titre}[/b]",
-                markup=True,
-                color=BLACK,
-                font_size=dp(16),
-                halign="left",
-                valign="top",
-                size_hint_y=None
-            )
-
-            # ------------------------------------------------
-            # URL
-            # ------------------------------------------------
-
-            label_url = Label(
-                text=lien,
-                color=GREY,
-                font_size=dp(12),
-                halign="left",
-                valign="top",
-                size_hint_y=None
-            )
-
-            # ------------------------------------------------
-            # DESCRIPTION
-            # ------------------------------------------------
-
-            label_description = Label(
-                text=description,
-                color=BLACK,
-                font_size=dp(14),
-                halign="left",
-                valign="top",
-                size_hint_y=None
-            )
-
-            # ------------------------------------------------
-            # LARGEUR
-            # ------------------------------------------------
-
-            def ajuster_largeur(instance, size):
-
-                largeur = max(
-                    dp(1),
-                    size[0] - dp(24)
-                )
-
-                label_titre.text_size = (
-                    largeur,
-                    None
-                )
-
-                label_url.text_size = (
-                    largeur,
-                    None
-                )
-
-                label_description.text_size = (
-                    largeur,
-                    None
-                )
-
-            # ------------------------------------------------
-            # HAUTEUR DES TEXTES
-            # ------------------------------------------------
-
-            def ajuster_hauteurs(*args):
-
-                label_titre.height = (
-                    label_titre.texture_size[1]
-                )
-
-                label_url.height = (
-                    label_url.texture_size[1]
-                )
-
-                label_description.height = (
-                    label_description.texture_size[1]
-                )
-
-                bloc.height = (
-                    label_titre.height
-                    + label_url.height
-                    + label_description.height
-                    + dp(32)
-                )
-
-            # ------------------------------------------------
-            # LIENS KIVY
-            # ------------------------------------------------
-
-            bloc.bind(
-                size=ajuster_largeur
-            )
-
-            label_titre.bind(
-                texture_size=ajuster_hauteurs
-            )
-
-            label_url.bind(
-                texture_size=ajuster_hauteurs
-            )
-
-            label_description.bind(
-                texture_size=ajuster_hauteurs
-            )
-
-            # ------------------------------------------------
-            # AJOUT
-            # ------------------------------------------------
-
-            bloc.add_widget(
-                label_titre
-            )
-
-            bloc.add_widget(
-                label_url
-            )
-
-            bloc.add_widget(
-                label_description
-            )
-
-            self.resultats_box.add_widget(
-                bloc
-            )
-
-        # ----------------------------------------------------
-        # POSITION DE DEPART
         # ----------------------------------------------------
 
         self.scroll.scroll_y = 1
