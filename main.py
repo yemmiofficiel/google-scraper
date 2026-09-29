@@ -18,7 +18,7 @@ from openpyxl import Workbook
 # CONFIGURATION
 # ============================================================
 
-API_KEY = "88e3203983def48b718621901e3ee9986537f903cb82eddf65495d4b252eee713b7fec3db44ef74d"
+API_KEY = "cb82eddf65495d4b252eee713b7fec3db44ef74d"
 
 ORANGE = (1.0, 0.45, 0.0, 1)
 BLACK = (0, 0, 0, 1)
@@ -97,7 +97,7 @@ class SearchApp(App):
         root = BoxLayout(
             orientation="vertical",
             padding=dp(15),
-            spacing=dp(12)
+            spacing=dp(10)
         )
 
         # ----------------------------------------------------
@@ -123,7 +123,7 @@ class SearchApp(App):
             orientation="horizontal",
             padding=dp(4),
             size_hint_y=None,
-            height=dp(62)
+            height=dp(60)
         )
 
         self.input = TextInput(
@@ -142,13 +142,13 @@ class SearchApp(App):
         root.add_widget(search_box)
 
         # ----------------------------------------------------
-        # BOUTON RECHERCHER
+        # BOUTON RECHERCHE
         # ----------------------------------------------------
 
         btn_search = Button(
-            text="🔎  RECHERCHER",
+            text="RECHERCHER",
             size_hint_y=None,
-            height=dp(55),
+            height=dp(52),
             font_size=dp(17),
             bold=True,
             color=WHITE,
@@ -163,7 +163,7 @@ class SearchApp(App):
         root.add_widget(btn_search)
 
         # ----------------------------------------------------
-        # EN-TÊTE DES RÉSULTATS
+        # INFORMATIONS RESULTATS
         # ----------------------------------------------------
 
         self.resultats_info = Label(
@@ -177,13 +177,9 @@ class SearchApp(App):
             height=dp(35)
         )
 
-        self.resultats_info.bind(
-            size=lambda instance, value:
-            setattr(
-                instance,
-                "text_size",
-                value
-            )
+        self.resultats_info.text_size = (
+            None,
+            dp(35)
         )
 
         root.add_widget(
@@ -191,7 +187,7 @@ class SearchApp(App):
         )
 
         # ----------------------------------------------------
-        # ZONE SCROLLABLE DES RÉSULTATS
+        # SCROLL DES RESULTATS
         # ----------------------------------------------------
 
         self.scroll = ScrollView(
@@ -203,19 +199,20 @@ class SearchApp(App):
 
         self.resultats_box = BoxLayout(
             orientation="vertical",
-            spacing=dp(12),
-            size_hint_y=None,
+            spacing=dp(10),
             padding=[
                 dp(3),
-                dp(5),
+                dp(3),
                 dp(3),
                 dp(10)
-            ]
+            ],
+            size_hint_y=None
         )
 
         self.resultats_box.bind(
-            minimum_height=
-            self.resultats_box.setter("height")
+            minimum_height=self.resultats_box.setter(
+                "height"
+            )
         )
 
         self.scroll.add_widget(
@@ -227,13 +224,13 @@ class SearchApp(App):
         )
 
         # ----------------------------------------------------
-        # BOUTON EXPORT EXCEL
+        # EXPORT EXCEL
         # ----------------------------------------------------
 
         self.btn_excel = Button(
-            text="📊  EXPORTER LES RÉSULTATS VERS EXCEL",
+            text="EXPORTER LES RÉSULTATS VERS EXCEL",
             size_hint_y=None,
-            height=dp(58),
+            height=dp(55),
             font_size=dp(15),
             bold=True,
             color=BLACK,
@@ -253,7 +250,7 @@ class SearchApp(App):
         return root
 
     # ========================================================
-    # RECHERCHE SERPER
+    # RECHERCHE
     # ========================================================
 
     def rechercher(self, instance):
@@ -297,7 +294,7 @@ class SearchApp(App):
                 self.afficher_message(
                     f"Erreur API HTTP "
                     f"{response.status_code}\n\n"
-                    f"{response.text[:1000]}"
+                    f"{response.text[:500]}"
                 )
 
                 return
@@ -311,11 +308,11 @@ class SearchApp(App):
 
             if not self.resultats:
 
+                self.btn_excel.disabled = True
+
                 self.afficher_message(
                     "Aucun résultat trouvé."
                 )
-
-                self.btn_excel.disabled = True
 
                 return
 
@@ -331,7 +328,7 @@ class SearchApp(App):
             )
 
     # ========================================================
-    # AFFICHAGE DES RESULTATS
+    # AFFICHAGE RESULTATS
     # ========================================================
 
     def afficher_resultats(self):
@@ -341,8 +338,7 @@ class SearchApp(App):
         nombre = len(self.resultats)
 
         self.resultats_info.text = (
-            f"Résultats : {nombre}    "
-            f"|    Faites défiler pour parcourir les résultats"
+            f"Résultats trouvés : {nombre}"
         )
 
         for i, resultat in enumerate(
@@ -366,17 +362,12 @@ class SearchApp(App):
             )
 
             # ------------------------------------------------
-            # BLOC DU RESULTAT
+            # BLOC RESULTAT
             # ------------------------------------------------
 
             bloc = BorderedBox(
                 orientation="vertical",
-                padding=[
-                    dp(12),
-                    dp(10),
-                    dp(12),
-                    dp(10)
-                ],
+                padding=dp(12),
                 spacing=dp(7),
                 size_hint_y=None
             )
@@ -395,11 +386,16 @@ class SearchApp(App):
                 size_hint_y=None
             )
 
+            label_titre.text_size = (
+                None,
+                None
+            )
+
             # ------------------------------------------------
             # URL
             # ------------------------------------------------
 
-            label_lien = Label(
+            label_url = Label(
                 text=f"[color=666666]{lien}[/color]",
                 markup=True,
                 color=GREY,
@@ -423,29 +419,219 @@ class SearchApp(App):
             )
 
             # ------------------------------------------------
-            # LARGEUR DES TEXTES
+            # LARGEUR DU TEXTE
             # ------------------------------------------------
 
-            def ajuster_largeur(instance, width):
+            largeur = (
+                self.scroll.width
+                - dp(35)
+            )
 
-                largeur = max(
-                    dp(100),
-                    width - dp(30)
-                )
+            label_titre.text_size = (
+                largeur,
+                None
+            )
 
-                label_titre.text_size = (
-                    largeur,
-                    None
-                )
+            label_url.text_size = (
+                largeur,
+                None
+            )
 
-                label_lien.text_size = (
-                    largeur,
-                    None
-                )
+            label_description.text_size = (
+                largeur,
+                None
+            )
 
-                label_description.text_size = (
-                    largeur,
-                    None
-                )
+            # ------------------------------------------------
+            # HAUTEUR
+            # ------------------------------------------------
 
-                self.maj_
+            label_titre.height = (
+                label_titre.texture_size[1]
+                + dp(3)
+            )
+
+            label_url.height = (
+                label_url.texture_size[1]
+                + dp(3)
+            )
+
+            label_description.height = (
+                label_description.texture_size[1]
+                + dp(3)
+            )
+
+            # ------------------------------------------------
+            # AJOUT
+            # ------------------------------------------------
+
+            bloc.add_widget(
+                label_titre
+            )
+
+            bloc.add_widget(
+                label_url
+            )
+
+            bloc.add_widget(
+                label_description
+            )
+
+            # ------------------------------------------------
+            # HAUTEUR DU BLOC
+            # ------------------------------------------------
+
+            bloc.height = (
+                label_titre.height
+                + label_url.height
+                + label_description.height
+                + dp(40)
+            )
+
+            self.resultats_box.add_widget(
+                bloc
+            )
+
+        # Revenir en haut après une nouvelle recherche
+        self.scroll.scroll_y = 1
+
+    # ========================================================
+    # MESSAGE
+    # ========================================================
+
+    def afficher_message(self, message):
+
+        self.resultats_box.clear_widgets()
+
+        self.resultats_info.text = (
+            "Résultats de recherche"
+        )
+
+        label = Label(
+            text=message,
+            color=BLACK,
+            font_size=dp(17),
+            halign="center",
+            valign="middle",
+            size_hint_y=None
+        )
+
+        label.text_size = (
+            self.scroll.width - dp(30),
+            None
+        )
+
+        label.height = (
+            label.texture_size[1]
+            + dp(30)
+        )
+
+        self.resultats_box.add_widget(
+            label
+        )
+
+    # ========================================================
+    # EXPORT EXCEL
+    # ========================================================
+
+    def exporter_excel(self, instance):
+
+        if not self.resultats:
+
+            self.afficher_message(
+                "Aucun résultat à exporter."
+            )
+
+            return
+
+        try:
+
+            workbook = Workbook()
+
+            sheet = workbook.active
+
+            sheet.title = "Résultats"
+
+            sheet.append([
+                "N°",
+                "Titre",
+                "URL",
+                "Description"
+            ])
+
+            for i, resultat in enumerate(
+                self.resultats,
+                start=1
+            ):
+
+                sheet.append([
+                    i,
+                    resultat.get(
+                        "title",
+                        ""
+                    ),
+                    resultat.get(
+                        "link",
+                        ""
+                    ),
+                    resultat.get(
+                        "snippet",
+                        ""
+                    )
+                ])
+
+            sheet.column_dimensions[
+                "A"
+            ].width = 8
+
+            sheet.column_dimensions[
+                "B"
+            ].width = 45
+
+            sheet.column_dimensions[
+                "C"
+            ].width = 70
+
+            sheet.column_dimensions[
+                "D"
+            ].width = 90
+
+            dossier = os.path.join(
+                self.user_data_dir,
+                "exports"
+            )
+
+            os.makedirs(
+                dossier,
+                exist_ok=True
+            )
+
+            fichier = os.path.join(
+                dossier,
+                "resultats_google.xlsx"
+            )
+
+            workbook.save(
+                fichier
+            )
+
+            self.afficher_message(
+                "Export Excel réussi !\n\n"
+                f"Fichier enregistré :\n\n"
+                f"{fichier}"
+            )
+
+        except Exception as e:
+
+            self.afficher_message(
+                "Erreur lors de l'export Excel :\n\n"
+                + str(e)
+            )
+
+
+# ============================================================
+# LANCEMENT
+# ============================================================
+
+if __name__ == "__main__":
+    SearchApp().run()
